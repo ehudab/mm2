@@ -1,0 +1,20 @@
+((total_count $db $pattern)
+    (, ((count $db) $p $t))
+    (, (exec 0 $p $t))
+)
+
+
+((count $db)
+    (, ($db $p))
+    (O
+        (count
+            (count of $db $c)
+            $c
+            ($p)
+        )
+    )
+)
+
+
+
+

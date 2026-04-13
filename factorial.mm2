@@ -1,0 +1,52 @@
+; Base truth of factorial
+(factorial 1 1)
+(factorial 0 1)
+
+
+;Query
+(factorial 23)
+
+
+
+(exec 0 
+        (, (factorial0 $p $t))
+        (, (exec 0 $p $t))
+)
+(factorial0
+        (, (factorial $num $fac) (factorial $n) (factorial2 $p $t))
+        (O
+                (- (factorial $num))
+                (+ ($n factorial $n $n))
+                (- ($n factorial $num $n))
+                (+ (exec 1 $p $t))
+        )
+)
+(factorial1 
+       (, ($n factorial $x $y) (factorial2 $p $t))
+    (O
+        (- ($n factorial $x $y))
+        (pure
+            ($n factorial $x $a)
+            $a
+            (i64_to_string (product_i64 (i64_from_string $n) (i64_from_string $y)))
+        )
+        (+ (exec 1 $p $t))
+    ) 
+)
+
+(factorial2
+        (, ($n factorial $x $y) (factorial1 $p $t))
+        (O
+                (- ($n factorial $x $y))
+                (pure
+                        ($b factorial $x $y)
+                        $b
+                        (i64_to_string (sub_i64 (i64_from_string $n) (i64_from_string 1)))
+                )
+                (+ (exec 1 $p $t))
+                (+ (exec 0 (, (1 factorial $x $y)) (O (- (1 factorial $x $y)) (+ (factorial $x $y)))))
+        )
+)
+
+
+

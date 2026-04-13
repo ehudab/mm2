@@ -1,0 +1,101 @@
+;(cal_binomial (db_size $db) (n_conjuncts_new $pattern))
+;(n! / (k! (n-k)!))
+
+(exec 0 
+    (, ((cal_binomial 23 18) $p $t)) 
+    (, (exec 0 $p $t))
+    
+)
+
+((cal_binomial $n $k)
+    (, (factorial0 $p $t))
+    (O
+        (+ (factorial $n))
+        (+ (factorial $k))
+        (pure
+            (factorial $x)
+            $x
+            (i64_to_string (sub_i64 (i64_from_string $n) (i64_from_string $k)))
+        )
+        (+ (exec 0 (, (factorial0 $p $t)) (, (exec 0 $p $t))))
+        (+
+            (exec 2
+                (, (factorial $n $nf) (factorial $k $kf))
+                (O
+                    (pure
+                        (exec 2
+                            (, (factorial $nk $nkf))
+                            (O
+                                (- (factorial $n))
+                                (- (factorial $k))
+                                (- (factorial $nk))
+                                (pure
+                                    (cal_binomial $n $k $r)
+                                    $r
+                                    (i64_to_string (div_i64 (i64_from_string $nf) (product_i64 (i64_from_string $kf) (i64_from_string $nkf))))
+                                )
+                            )
+                        )
+                        $nk
+                        (f64_to_string (sub_f64 (f64_from_string $n) (f64_from_string $k)))
+                    )
+                )
+            )
+        )
+        
+        
+    )
+)
+
+
+
+
+; Base truth of factorial
+(factorial 1 1)
+(factorial 0 1)
+
+
+;Query
+(factorial 0)
+
+
+
+;(exec 0 (, (factorial0 $p $t)) (, (exec 0 $p $t)))
+(factorial0
+        (, (factorial $num $fac) (factorial $n) (factorial2 $p $t))
+        (O
+                (- (factorial $num))
+                (+ ($n factorial $n $n))
+                (- ($n factorial $num $n))
+                (+ (exec 1 $p $t))
+        )
+)
+(factorial1 
+       (, ($n factorial $x $y) (factorial2 $p $t))
+    (O
+        (- ($n factorial $x $y))
+        (pure
+            ($n factorial $x $a)
+            $a
+            (i64_to_string (product_i64 (i64_from_string $n) (i64_from_string $y)))
+        )
+        (+ (exec 1 $p $t))
+    ) 
+)
+
+(factorial2
+        (, ($n factorial $x $y) (factorial1 $p $t))
+        (O
+                (- ($n factorial $x $y))
+                (pure
+                        ($b factorial $x $y)
+                        $b
+                        (i64_to_string (sub_i64 (i64_from_string $n) (i64_from_string 1)))
+                )
+                (+ (exec 1 $p $t))
+                (+ (exec 0 (, (1 factorial $x $y)) (O (- (1 factorial $x $y)) (+ (factorial $x $y)))))
+        )
+)
+
+
+
