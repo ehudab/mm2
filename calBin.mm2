@@ -1,101 +1,103 @@
 ;(cal_binomial (db_size $db) (n_conjuncts_new $pattern))
 ;(n! / (k! (n-k)!))
 
-(exec 0 
-    (, ((cal_binomial 23 18) $p $t)) 
-    (, (exec 0 $p $t))
-    
-)
+; Overflow danger zone: n≥67 when k≈n/2
 
-((cal_binomial $n $k)
-    (, (factorial0 $p $t))
+
+; Calculates the binomial coefficient,
+; First it calculates the permutations of P(n, k) and P(k, k) then divides them
+
+
+((cal_binomial ($n $k))
+    (, (permutation0 $p $t))
     (O
-        (+ (factorial $n))
-        (+ (factorial $k))
-        (pure
-            (factorial $x)
-            $x
-            (i64_to_string (sub_i64 (i64_from_string $n) (i64_from_string $k)))
+        (+ (permutation ($n $k)))
+        (+ (permutation ($k $k)))
+        
+        (+ 
+            (exec 0 
+                (, (permutation0 $p $t)) 
+                (, (exec 1 $p $t))
+            )
         )
-        (+ (exec 0 (, (factorial0 $p $t)) (, (exec 0 $p $t))))
         (+
             (exec 2
-                (, (factorial $n $nf) (factorial $k $kf))
+                (, (permutation ($n $k) $p1) (permutation ($k $k) $p2))
                 (O
                     (pure
-                        (exec 2
-                            (, (factorial $nk $nkf))
-                            (O
-                                (- (factorial $n))
-                                (- (factorial $k))
-                                (- (factorial $nk))
-                                (pure
-                                    (cal_binomial $n $k $r)
-                                    $r
-                                    (i64_to_string (div_i64 (i64_from_string $nf) (product_i64 (i64_from_string $kf) (i64_from_string $nkf))))
-                                )
-                            )
+                        (cal_binomial ($n $k) $s)
+                        $s
+                        (i64_to_string (div_i64 (i64_from_string $p1) (i64_from_string $p2)))
+                    )
+                    (+
+                        (exec (6)
+                            (, (dbcount $db $dbcount) (countedpattern $pattern $ptrncount) (cal_binomial ($dbcount $ptrncount) $calbin))
+                            (, (total_count ($db $pattern) $calbin))
                         )
-                        $nk
-                        (f64_to_string (sub_f64 (f64_from_string $n) (f64_from_string $k)))
                     )
                 )
             )
         )
-        
-        
     )
 )
 
 
 
 
-; Base truth of factorial
-(factorial 1 1)
-(factorial 0 1)
-
-
-;Query
-(factorial 0)
 
 
 
-;(exec 0 (, (factorial0 $p $t)) (, (exec 0 $p $t)))
-(factorial0
-        (, (factorial $num $fac) (factorial $n) (factorial2 $p $t))
+
+; Base permutation values
+(permutation (1 1) 1)
+(permutation (1 0) 1)
+
+
+(permutation0
+        (, (permutation ($num1 $num2) $per) (permutation ($n1 $n2)) (permutation2 $p $t))
         (O
-                (- (factorial $num))
-                (+ ($n factorial $n $n))
-                (- ($n factorial $num $n))
+                (- (permutation ($num1 $num2)))
+                (- (permutation ($n1 $n2)))
+                (pure
+                    (($n1 $m) permutation ($n1 $n2) $n1)
+                    $m
+                    (i64_to_string (sub_i64 (i64_from_string $n1) (i64_from_string $n2)))
+                )
                 (+ (exec 1 $p $t))
         )
 )
-(factorial1 
-       (, ($n factorial $x $y) (factorial2 $p $t))
+
+(permutation1 
+       (, (($n $m) permutation ($n1 $n2) $per) (permutation2 $p $t))
     (O
-        (- ($n factorial $x $y))
+        (- (($n $m) permutation ($n1 $n2) $per))
         (pure
-            ($n factorial $x $a)
+            (($n $m) permutation ($n1 $n2) $a)
             $a
-            (i64_to_string (product_i64 (i64_from_string $n) (i64_from_string $y)))
+            (i64_to_string (product_i64 (i64_from_string $n) (i64_from_string $per)))
         )
         (+ (exec 1 $p $t))
     ) 
 )
 
-(factorial2
-        (, ($n factorial $x $y) (factorial1 $p $t))
+
+(permutation2
+        (, (($n $m) permutation ($n1 $n2) $per) (permutation1 $p $t))
         (O
-                (- ($n factorial $x $y))
+                (- (($n $m) permutation ($n1 $n2) $per))
                 (pure
-                        ($b factorial $x $y)
-                        $b
+                        (($a $m) permutation ($n1 $n2) $per)
+                        $a
                         (i64_to_string (sub_i64 (i64_from_string $n) (i64_from_string 1)))
                 )
                 (+ (exec 1 $p $t))
-                (+ (exec 0 (, (1 factorial $x $y)) (O (- (1 factorial $x $y)) (+ (factorial $x $y)))))
+                (+ (exec 0 
+                        (, (($m $m) permutation ($n1 $n2) $per)) 
+                        (O 
+                                (- (($m $m) permutation ($n1 $n2) $per)) 
+                                (+ (permutation ($n1 $n2) $per))
+                        )
+                ))
         )
 )
-
-
 
